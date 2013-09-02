@@ -1,9 +1,216 @@
+<!DOCTYPE html>
 <html>
 <head>
-  <title>Test page</title>
+  <title>A jpeg Glitcher</title>
 </head>
+<body style="">
 
-<body bgcolor="black">
+<style>
+body {
+  text-align: center;
+  color: lightgray;
+  background: darkblue;
+  margin-top: 7%;
+  font-size: 266%;
+}
+  
+.images {
+	max-width: 6em;
+	max-height: 6em;
+	padding: 0.5em;
+	padding-bottom: 1em;
+	padding-top: 0.1em;
+}
 
-</body>
-</html>
+.drop {
+  margin-top: 2em;
+	min-height: 6em;
+	min-width: 70%;
+	max-width: 90%;
+	background: #222;
+	display: inline-block;
+	border: dashed 0.1em gray;
+	border-radius: 0.4em;
+
+	position: relative;
+}
+
+.drop-footer {
+  font-size: 54%;
+  color: #997;
+  position: absolute;
+  bottom: 0px;
+  left: 0.2em;
+  right: 0.2em;
+  padding-bottom: 0.4em;
+}
+
+#thumbs {
+	padding-bottom: 0.6em;
+}
+
+#thumbs > span {
+	display: inline-block;
+	padding-top: 0.15em;
+}
+
+#thumbs > span > span {
+	font-size: 0.5em;
+	padding: 0.4em;
+}
+
+#res {
+  border-radius: 0.3em;
+  max-width: 90%;
+  max-height: 50%;
+  
+  border: dashed 0.05em darkgray;
+  display: inline-block;
+  
+  margin: 1em;
+  margin-bottom: 2em;
+}
+
+#res img {
+  width: 20%;
+  margin: 1em;
+  border: 1px solid black;
+}
+
+.header {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	text-align: center;
+	color: lightgrey;
+	background: black;
+	padding: 0.6em 0 0.5em 0;
+}
+
+.footer {
+	font-size: 0.4em;
+	position: fixed;
+	bottom: 0.6em;
+	left: 0;
+	right: 0;
+	text-align: center;
+	color: lightgrey;
+	background: rgba(0,0,0,0.5);
+	padding: 0.6em 0 0.5em 0;
+}
+</style>
+<div class="drop" ondragenter="return false" ondragover="return false" ondrop="dropIt(event)">
+    <div id="thumbs"></div>
+<span class="drop-footer">Drag and drop stuff here</span>
+
+</div>
+
+<br />
+<div id="res" ></div> <br />
+
+<script>
+plist = [];function imagesSelected(myFiles) {
+  for (var i = 0, f; f = myFiles[i]; i++) {
+    (function(span) {
+	    document.getElementById('thumbs').insertBefore(span, null);
+
+	    span.innerHTML = ['<span >', f.name, '</span><br />','<img class="images" src="" title="', f.name, '"/>'].join('');
+      plist.push({ span: span, img: span.querySelector('img'), file: f, thumb: false });
+      
+    })(document.createElement('span'));
+  }
+  thumbone();
+}
+
+function dropIt(e) {  
+   e.stopPropagation();
+   e.preventDefault();
+   imagesSelected(e.dataTransfer.files);
+}
+
+function hackimg(x) {
+  var cnt = plist.length * Math.random() * 10;
+  var lst = document.querySelectorAll('#res img');
+  
+  for (var i = 0; i<lst.length; i++)
+    URL.revokeObjectURL(i.src);
+    
+    document.querySelector('#res').innerHTML = "";  
+  
+    // file is loaded
+    var dat = x.file;
+
+    for (var i=0; i < cnt; i++)
+    {
+      reader = new FileReader();
+      
+      var src = plist[Math.floor(plist.length * Math.random())];
+      
+      
+        var dat2 = src.file;
+        var start = (dat2.size-10) * Math.random();
+        var len = Math.min(dat2.size - start,dat2.size/10/(1+i) * Math.random());
+        
+        var dstart = (dat.size-10) * Math.random()/Math.abs(cnt/(cnt-i*2));
+        var dlen = Math.min(dat.size  - start,dat.size/100/(1+i) * Math.random());
+        
+        dat=new Blob([ dat.slice(0, dstart-1), dat2.slice(start, start+len), dat.slice(dstart+dlen, dat.size ) ],  {type: "image/jpeg"});
+        
+        
+        var url = URL.createObjectURL(dat);
+        document.querySelector('#res').innerHTML += "<a href='" + url + "' target='_blank'><img src='" + url + "' /></a>";
+    }
+}
+
+var notext = false;
+function thumbnify(event) {
+	var img = event.target;
+	var span = img.parentElement;
+	img.outerHTML = "<canvas class=\"images\" width=\"" + img.width + "\" height=\"" + img.height + "\">"
+	
+	var canvas = span.querySelector("canvas");
+	
+	canvas.onclick = function() { hackimg(img.fileref) }
+	var ctx=canvas.getContext("2d");
+	ctx.drawImage(img, 0, 0,canvas.width, canvas.height);
+
+	URL.revokeObjectURL(img.src);
+	
+	//chain
+	setTimeout(thumbone,100);
+	
+	if (!notext)
+	{
+    notext  = true;
+    document.querySelector(".drop-footer").innerHTML+="<br />Click on an image for random glitching";
+  }
+}
+
+function thumbone() {
+	for ( i=0;i<plist.length;i++) {
+		t = plist[i];
+		if (!t.thumb) {
+			t.thumb = true;
+			t.img.onload = thumbnify;
+			t.img.onerror = thumbone;
+			t.img.src=window.URL.createObjectURL(t.file);
+			t.img.fileref = t;
+			delete t.img;
+			break;
+		}
+	}
+}
+</script>
+
+<div class="header">
+  a jpeg glitcher
+</div>
+
+<div class="footer">
+  developed by <a class="skmp" href="http://github.com/skmp">skmp</a> | using HTML5 File/Blob api <br />
+  <a href="https://github.com/skmp/glitcher">fork me on github</a>
+</div>
+	
+<!-- I Really love people that inspect pages <3 -->
+</body></html>

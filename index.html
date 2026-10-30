@@ -1,219 +1,1244 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="image_src" href="logo.jpg">
   <title>A jpeg Glitcher</title>
-</head>
-<body style="">
-
 <style>
+:root {
+  --bg: #1a1a1a;
+  --panel: #222;
+  --line: #383838;
+  --text: lightgray;
+  --dim: #997;
+  --accent: #d8d27e;
+  --learn: #ff4f8b;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
 body {
-  text-align: center;
-  color: lightgray;
-  background: #1a1a1a;
-  margin-top: 7%;
-  font-size: 266%;
-}
-  
-.images {
-	max-width: 6em;
-	max-height: 6em;
-	padding: 0.5em;
-	padding-bottom: 1em;
-	padding-top: 0.1em;
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+  font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-.drop {
-  margin-top: 2em;
-	min-height: 6em;
-	min-width: 70%;
-	max-width: 90%;
-	background: #222;
-	display: inline-block;
-	border: dashed 0.1em gray;
-	border-radius: 0.4em;
-
-	position: relative;
-}
-
-.drop-footer {
-  font-size: 54%;
-  color: #997;
-  position: absolute;
-  bottom: 0px;
-  left: 0.2em;
-  right: 0.2em;
-  padding-bottom: 0.4em;
-}
-
-#thumbs {
-	padding-bottom: 0.6em;
-}
-
-#thumbs > span {
-	display: inline-block;
-	padding-top: 0.15em;
-}
-
-#thumbs > span > span {
-	font-size: 0.5em;
-	padding: 0.4em;
-}
-
-#res {
-  border-radius: 0.3em;
-  max-width: 90%;
-  max-height: 50%;
-  
-  border: dashed 0.05em darkgray;
-  display: inline-block;
-  
-  margin: 1em;
-  margin-bottom: 2em;
-  
-  background: rgba(0,0,0,0.1);
-}
-
-#res img {
-  width: 20%;
-  margin: 1em;
-  border: 1px solid black;
+a, label.link {
+  color: var(--dim);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .header {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	text-align: center;
-	color: lightgrey;
-	background: black;
-	padding: 0.6em 0 0.5em 0;
+  text-align: center;
+  background: black;
+  padding: 0.4em 0 0.35em;
+  font: 2.2em serif;
+}
+
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  padding: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  main { grid-template-columns: minmax(0, 1fr); }
+}
+
+.drop {
+  text-align: center;
+  background: #222;
+  border: dashed 2px gray;
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 96px;
+}
+
+.drop.over { border-color: var(--accent); }
+
+#thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.thumb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 120px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.thumb .name {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--dim);
+}
+
+.thumb canvas {
+  display: block;
+  max-width: 110px;
+  max-height: 56px;
+}
+
+.thumb.active { border-color: var(--accent); }
+.thumb.pending { opacity: 0.4; }
+.thumb.invalid { opacity: 0.45; cursor: not-allowed; }
+.thumb.invalid .name { text-decoration: line-through; }
+.thumb.invalid canvas { display: none; }
+.thumb.invalid::after { content: 'skipped'; font-size: 10px; color: var(--learn); }
+
+.thumb .rm, #res .rm {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 4px;
+  line-height: 1.2;
+  display: none;
+}
+
+.thumb:hover .rm, #res figure:hover .rm { display: block; }
+
+.drop-footer {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: dashed 1px darkgray;
+  border-radius: 6px;
+}
+
+#out {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  cursor: zoom-in;
+}
+
+#out:fullscreen { background: black; }
+
+#stats, #note {
+  margin-top: 8px;
+  min-height: 1.4em;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+#note { color: var(--learn); }
+
+.placeholder { display: none; color: #666; }
+.screen.empty .placeholder { display: block; }
+.screen.empty #out, .screen.empty #stats { display: none; }
+
+#res {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+#res figure {
+  position: relative;
+  width: 160px;
+  margin: 0;
+  background: #222;
+  border: 1px solid black;
+}
+
+#res img, #res video {
+  display: block;
+  width: 100%;
+}
+
+#res figcaption {
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+.panel {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+#midi-status, #midi-hint {
+  width: 100%;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+#midi-hint { color: var(--learn); }
+#midi-hint:empty { display: none; }
+
+button {
+  position: relative;
+  padding: 5px 8px;
+  font: inherit;
+  color: var(--text);
+  background: #2c2c2c;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover { border-color: #666; }
+
+button.on {
+  color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 6px;
+  margin: 12px 0 4px;
+}
+
+fieldset {
+  margin: 10px 0 0;
+  padding: 8px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+legend {
+  padding-right: 6px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr) 4.8em 3.4em;
+  gap: 6px;
+  align-items: center;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.row label { white-space: nowrap; }
+
+.row output {
+  text-align: right;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type=range] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.bind {
+  font-size: 10px;
+  font-style: normal;
+  text-align: right;
+  color: var(--learn);
+}
+
+button .bind {
+  position: absolute;
+  top: -7px;
+  right: 3px;
+  padding: 0 2px;
+  background: var(--panel);
+  border-radius: 3px;
+}
+
+button .bind:empty { display: none; }
+
+.learning [data-key] {
+  outline: 1px dashed #555;
+  cursor: copy;
+}
+
+.learning [data-key]:hover { outline-color: var(--learn); }
+
+[data-key].armed {
+  outline: 2px solid var(--learn) !important;
+  background: rgba(255, 79, 139, 0.12);
 }
 
 .footer {
-	font-size: 0.4em;
-	position: fixed;
-	bottom: 0.6em;
-	left: 0;
-	right: 0;
-	text-align: center;
-	color: lightgrey;
-	background: rgba(0,0,0,0.5);
-	padding: 0.6em 0 0.5em 0;
+  margin-top: 24px;
+  padding: 0.6em 0 0.5em;
+  text-align: center;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.5);
 }
 </style>
-<div class="drop" ondragenter="return false" ondragover="return false" ondrop="dropIt(event)">
-    <div id="thumbs"></div>
-<span class="drop-footer">Drag and drop stuff here</span>
-
-</div>
-
-<br />
-<div id="res" ></div> <br />
-
-<script>
-plist = [];function imagesSelected(myFiles) {
-  for (var i = 0, f; f = myFiles[i]; i++) {
-    (function(span) {
-	    document.getElementById('thumbs').insertBefore(span, null);
-
-	    span.innerHTML = ['<span >', f.name, '</span><br />','<img class="images" src="" title="', f.name, '"/>'].join('');
-      plist.push({ span: span, img: span.querySelector('img'), file: f, thumb: false });
-      
-    })(document.createElement('span'));
-  }
-  thumbone();
-}
-
-function dropIt(e) {  
-   e.stopPropagation();
-   e.preventDefault();
-   imagesSelected(e.dataTransfer.files);
-}
-
-function hackimg(x) {
-  var cnt = plist.length * Math.random() * 10;
-  var lst = document.querySelectorAll('#res img');
-  
-  for (var i = 0; i<lst.length; i++)
-    URL.revokeObjectURL(i.src);
-    
-    document.querySelector('#res').innerHTML = "";  
-  
-    // file is loaded
-    var dat = x.file;
-
-    for (var i=0; i < cnt; i++)
-    {
-      reader = new FileReader();
-      
-      var src = plist[Math.floor(plist.length * Math.random())];
-      
-      
-        var dat2 = src.file;
-        var start = (dat2.size-10) * Math.random();
-        var len = Math.min(dat2.size - start,dat2.size/10/(1+i) * Math.random());
-        
-        var dstart = (dat.size-10) * Math.random()/Math.abs(cnt/(cnt-i*2));
-        var dlen = Math.min(dat.size  - start,dat.size/100/(1+i) * Math.random());
-        
-        dat=new Blob([ dat.slice(0, dstart-1), dat2.slice(start, start+len), dat.slice(dstart+dlen, dat.size ) ],  {type: "image/jpeg"});
-        
-        
-        var url = URL.createObjectURL(dat);
-        document.querySelector('#res').innerHTML += "<a href='" + url + "' target='_blank'><img src='" + url + "' /></a>";
-    }
-}
-
-var notext = false;
-function thumbnify(event) {
-	var img = event.target;
-	var span = img.parentElement;
-	img.outerHTML = "<canvas class=\"images\" width=\"" + img.width + "\" height=\"" + img.height + "\">"
-	
-	var canvas = span.querySelector("canvas");
-	
-	canvas.onclick = function() { hackimg(img.fileref) }
-	var ctx=canvas.getContext("2d");
-	ctx.drawImage(img, 0, 0,canvas.width, canvas.height);
-
-	URL.revokeObjectURL(img.src);
-	
-	//chain
-	setTimeout(thumbone,100);
-	
-	if (!notext)
-	{
-    notext  = true;
-    document.querySelector(".drop-footer").innerHTML+="<br />Click on an image for random glitching";
-  }
-}
-
-function thumbone() {
-	for ( i=0;i<plist.length;i++) {
-		t = plist[i];
-		if (!t.thumb) {
-			t.thumb = true;
-			t.img.onload = thumbnify;
-			t.img.onerror = thumbone;
-			t.img.src=window.URL.createObjectURL(t.file);
-			t.img.fileref = t;
-			delete t.img;
-			break;
-		}
-	}
-}
-</script>
+</head>
+<body>
 
 <div class="header">
   a jpeg glitcher
 </div>
 
+<main>
+  <section>
+    <div class="drop" id="drop">
+      <div id="thumbs"></div>
+      <div class="drop-footer">
+        Drag and drop images here, or <label class="link">browse<input type="file" id="files" accept="image/*" multiple hidden></label>
+        · <a href="#" id="demo">try the demo image</a><br>
+        Click a thumbnail to glitch it. Every image you add also lends its bytes to the others.
+      </div>
+    </div>
+
+    <div class="screen empty" id="screen">
+      <canvas id="out"></canvas>
+      <div class="placeholder">nothing to glitch yet</div>
+      <div id="stats"></div>
+      <div id="note"></div>
+    </div>
+
+    <div id="res"></div>
+  </section>
+
+  <aside class="panel" id="panel">
+    <div class="bar">
+      <button id="midi-on">Enable MIDI</button>
+      <button id="learn" title="Click a control, then move a knob or hit a pad">Learn</button>
+      <button id="automap" title="Move your knobs one at a time; each takes the next unmapped slider">Auto-map</button>
+      <button id="forget" title="Forget all MIDI mappings">Forget</button>
+      <div id="midi-status">MIDI off</div>
+      <div id="midi-hint"></div>
+    </div>
+    <div class="actions" id="actions"></div>
+    <div id="params"></div>
+  </aside>
+</main>
+
 <div class="footer">
   developed by <a class="skmp" href="http://github.com/skmp">skmp</a> | using HTML5 File/Blob api <br />
   <a href="https://github.com/skmp/glitcher">fork me on github</a>
 </div>
-	
+
+<script>
+(() => {
+'use strict';
+
+const MAX_DIM = 1280;   // larger sources are re-encoded so decoding keeps up with the frame rate
+const STORE_KEY = 'glitcher:v2';
+const $ = sel => document.querySelector(sel);
+const clamp = n => Math.min(1, Math.max(0, n));
+
+// ---------- controls ----------
+
+const pct = v => Math.round(v * 100) + '%';
+const size = v => v < 1024 ? v + ' B' : (v / 1024).toFixed(v < 10240 ? 1 : 0) + ' KB';
+
+const PARAMS = [
+  { key: 'splice',   group: 'Data',   label: 'Splice',    max: 32, curve: 2, int: true, def: 4, hint: 'chunks spliced in from the dropped images' },
+  { key: 'chunk',    group: 'Data',   label: 'Chunk',     min: 1, max: 65536, curve: 'log', int: true, def: 2048, fmt: size, hint: 'largest spliced or stuttered chunk' },
+  { key: 'corrupt',  group: 'Data',   label: 'Corrupt',   max: 256, curve: 2, int: true, def: 4, hint: 'random bytes overwritten' },
+  { key: 'shift',    group: 'Data',   label: 'Shift',     max: 24, curve: 2, int: true, def: 0, hint: 'bytes inserted or dropped, knocking the bitstream out of step' },
+  { key: 'repeat',   group: 'Data',   label: 'Stutter',   max: 8, int: true, def: 0, hint: 'chunks duplicated in place' },
+  { key: 'focus',    group: 'Data',   label: 'Focus',     def: 0.5, fmt: pct, rand: 'uniform', hint: 'where the damage lands, top to bottom' },
+  { key: 'spread',   group: 'Data',   label: 'Spread',    def: 1, fmt: pct, rand: 'uniform', hint: 'how much of the image the damage can reach' },
+  { key: 'rate',     group: 'Motion', label: 'Rate',      min: 1, max: 30, curve: 2, def: 10, fmt: v => v.toFixed(v < 10 ? 1 : 0) + ' fps', hint: 'new glitch frames per second' },
+  { key: 'evolve',   group: 'Motion', label: 'Evolve',    def: 0, fmt: pct, hint: 'chance a frame builds on the last good frame instead of the clean image' },
+  { key: 'hop',      group: 'Motion', label: 'Hop',       curve: 2, def: 0, fmt: pct, hint: 'chance per frame of hopping to the next image' },
+  { key: 'image',    group: 'Motion', label: 'Image',     def: 0, fmt: () => imageLabel(), keep: true, hint: 'which image is being glitched' },
+  { key: 'gray',     group: 'Motion', label: 'Gray cap',  def: 0.5, fmt: v => v > 0.99 ? 'off' : pct(v), hint: 'skip frames where more than this much came out as undecoded gray' },
+  { key: 'tear',     group: 'Pixels', label: 'Tear',      curve: 1.5, def: 0, fmt: pct, hint: 'horizontal slices pushed sideways' },
+  { key: 'rgb',      group: 'Pixels', label: 'RGB split', curve: 2, def: 0, fmt: pct, hint: 'red and blue channels pulled apart' },
+  { key: 'blocks',   group: 'Pixels', label: 'Blocks',    max: 64, curve: 2, int: true, def: 0, hint: 'blocks dragged over from the previous frame' },
+  { key: 'trails',   group: 'Pixels', label: 'Trails',    max: 0.97, def: 0, fmt: pct, hint: 'how long old frames linger' },
+  { key: 'hue',      group: 'Pixels', label: 'Hue',       max: 360, int: true, def: 0, fmt: v => v + '°', rand: 'uniform', hint: 'hue rotation' },
+  { key: 'sat',      group: 'Pixels', label: 'Saturate',  max: 3, def: 1, fmt: pct, rand: 'near', hint: 'saturation' },
+  { key: 'contrast', group: 'Pixels', label: 'Contrast',  min: 0.5, max: 3, def: 1, fmt: pct, rand: 'near', hint: 'contrast' },
+];
+
+const ACTIONS = [
+  { key: 'play',      label: 'Play',      toggle: true, on: true, hint: 'Space' },
+  { key: 'reset',     label: 'Reset',     hint: 'back to the clean image (R)' },
+  { key: 'randomize', label: 'Randomize', hint: 'roll new data and pixel settings (X)' },
+  { key: 'prev',      label: '◀ Image',   hint: 'previous image (P)' },
+  { key: 'next',      label: 'Image ▶',   hint: 'next image (N)' },
+  { key: 'defaults',  label: 'Defaults',  hint: 'put every control back' },
+  { key: 'protect',   label: 'Protect',   toggle: true, on: true, hint: 'leave the JPEG header alone so far fewer frames break' },
+  { key: 'snap',      label: 'Snapshot',  hint: 'keep the current frame (S)' },
+  { key: 'rec',       label: 'Record',    toggle: true, hint: 'record the canvas to a video' },
+];
+
+const P = {}, A = {};
+
+for (const p of PARAMS) {
+  p.min ??= 0;
+  p.max ??= 1;
+  p.curve ??= 1;
+  if (p.curve === 'log') {
+    p.map = n => p.min * (p.max / p.min) ** n;
+    p.unmap = v => Math.log(v / p.min) / Math.log(p.max / p.min);
+  } else {
+    p.map = n => p.min + n ** p.curve * (p.max - p.min);
+    p.unmap = v => ((v - p.min) / (p.max - p.min)) ** (1 / p.curve);
+  }
+  p.fmt ??= String;
+  p.n = p.unmap(p.def);
+  P[p.key] = p;
+}
+
+for (const a of ACTIONS) A[a.key] = a;
+
+const val = key => {
+  const p = P[key], v = p.map(p.n);
+  return p.int ? Math.round(v) : v;
+};
+
+// ---------- state ----------
+
+const sources = [];
+let active = null;
+let loading = Promise.resolve();
+
+let current = null;   // ImageBitmap on screen
+let shown = null;     // the frame behind it: { src, bytes, lo, hi, base, seed }
+let busy = false, dirty = false, regen = false, lastGen = -Infinity, streak = 0;
+let recorder = null, noteTimer = 0, saveTimer = 0;
+
+const stats = { shown: 0, skipped: 0, why: {}, recent: [], times: [] };
+const WHY = { header: 'bad header', decode: 'undecodable', size: 'wrong size', gray: 'too gray' };
+
+const midi = { access: null, learn: false, auto: false, armed: null, map: {}, index: new Map(), held: {}, devices: '', last: '' };
+
+// ---------- jpeg ----------
+
+// Walks the header up to the first scan; returns the frame size and where the entropy-coded data starts.
+function parseJpeg(b) {
+  if (b[0] !== 0xFF || b[1] !== 0xD8) return null;
+  let i = 2, w = 0, h = 0;
+  while (i + 4 <= b.length) {
+    if (b[i] !== 0xFF) return null;
+    const m = b[i + 1];
+    if (m === 0xFF) { i++; continue; }
+    if (m === 0xD9) return null;
+    if (m === 0x01 || (m >= 0xD0 && m <= 0xD8)) { i += 2; continue; }
+    const len = b[i + 2] << 8 | b[i + 3];
+    if (len < 2 || i + 2 + len > b.length) return null;
+    if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC && len >= 7) {
+      h = b[i + 5] << 8 | b[i + 6];
+      w = b[i + 7] << 8 | b[i + 8];
+    }
+    if (m === 0xDA) return w && h ? { w, h, scan: i + 2 + len } : null;
+    i += 2 + len;
+  }
+  return null;
+}
+
+const scanEnd = b => b[b.length - 2] === 0xFF && b[b.length - 1] === 0xD9 ? b.length - 2 : b.length;
+
+function mulberry32(a) {
+  return () => {
+    a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// Separate streams per effect, so turning one knob up adds damage without reshuffling the rest.
+const stream = (seed, k) => mulberry32(seed ^ Math.imul(k, 0x9E3779B1));
+const newSeed = () => Math.random() * 2 ** 32 >>> 0;
+
+function mutate(base, seed) {
+  const b = base.bytes, n = b.length, protect = A.protect.on;
+  const lo = protect ? base.lo : 2, hi = protect ? base.hi : n, span = hi - lo;
+  if (span < 64) return b;
+
+  const width = Math.max(64, Math.round(span * val('spread')));
+  const wlo = Math.max(lo, Math.min(hi - width, Math.round(lo + span * val('focus') - width / 2)));
+  const pos = r => wlo + Math.floor(r() * width);
+  // 0xFF opens a marker inside scan data, which usually kills the rest of the image
+  const rbyte = r => Math.floor(r() * (protect ? 255 : 256));
+  const donors = usable();
+  const edits = [];
+  let r;
+
+  r = stream(seed, 1);
+  for (let i = 0, k = val('splice'); i < k && donors.length; i++) {
+    const d = donors[Math.floor(r() * donors.length)], dspan = d.hi - d.lo;
+    const len = 1 + Math.floor(r() * Math.min(val('chunk'), dspan - 1));
+    const from = d.lo + Math.floor(r() * (dspan - len));
+    const at = pos(r);
+    const ins = d.bytes.subarray(from, from + Math.min(len, hi - at));
+    edits.push({ at, del: ins.length, ins });
+  }
+
+  r = stream(seed, 2);
+  for (let i = 0, k = val('corrupt'); i < k; i++)
+    edits.push({ at: pos(r), del: 1, ins: Uint8Array.of(rbyte(r)) });
+
+  r = stream(seed, 3);
+  for (let i = 0, k = val('shift'); i < k; i++) {
+    const at = pos(r), len = 1 + Math.floor(r() * 4), grow = r() < 0.5;
+    const ins = new Uint8Array(grow ? len : 0);
+    for (let j = 0; j < ins.length; j++) ins[j] = rbyte(r);
+    edits.push({ at, del: grow ? 0 : Math.min(len, hi - at), ins });
+  }
+
+  r = stream(seed, 4);
+  for (let i = 0, k = val('repeat'); i < k; i++) {
+    const at = pos(r), len = 1 + Math.floor(r() * Math.min(val('chunk'), hi - at));
+    edits.push({ at, del: 0, ins: b.subarray(at, at + len) });
+  }
+
+  if (!edits.length) return b;
+  edits.sort((x, y) => x.at - y.at);
+  const parts = [];
+  let cur = 0, total = 0;
+  for (const e of edits) {
+    if (e.at < cur) continue;
+    parts.push(b.subarray(cur, e.at), e.ins);
+    cur = Math.min(n, e.at + e.del);
+  }
+  parts.push(b.subarray(cur));
+  for (const p of parts) total += p.length;
+  const out = new Uint8Array(total);
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+
+const probe = document.createElement('canvas');
+probe.width = probe.height = 32;
+const pctx = probe.getContext('2d', { willReadFrequently: true });
+
+// Share of the frame that came out blank: libjpeg paints blocks it couldn't decode flat mid-gray.
+function deadShare(bmp) {
+  pctx.clearRect(0, 0, 32, 32);
+  pctx.drawImage(bmp, 0, 0, 32, 32);
+  const d = pctx.getImageData(0, 0, 32, 32).data;
+  let dead = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    if (d[i + 3] < 128 || (Math.abs(r - 128) < 8 && Math.max(r, g, b) - Math.min(r, g, b) < 3)) dead++;
+  }
+  return dead / 1024;
+}
+
+// Rejects anything that won't make a usable frame, cheapest checks first.
+async function check(bytes, s) {
+  const info = parseJpeg(bytes);
+  if (!info || info.w !== s.w || info.h !== s.h) return { why: 'header' };
+  let bmp;
+  try {
+    bmp = await createImageBitmap(new Blob([bytes], { type: 'image/jpeg' }));
+  } catch {
+    return { why: 'decode' };
+  }
+  let why = '';
+  if (bmp.width !== s.dw || bmp.height !== s.dh) why = 'size';
+  else if (val('gray') <= 0.99 && deadShare(bmp) - s.dead > val('gray')) why = 'gray';
+  if (why) {
+    bmp.close();
+    return { why };
+  }
+  return { bmp, lo: info.scan };
+}
+
+// ---------- sources ----------
+
+const usable = () => sources.filter(s => s.ok);
+
+function imageLabel() {
+  const list = usable();
+  return active ? `${list.indexOf(active) + 1} / ${list.length}` : '–';
+}
+
+function addFiles(files) {
+  for (const file of files) {
+    const s = { name: file.name, ok: false, el: document.createElement('span') };
+    s.el.className = 'thumb pending';
+    s.el.title = file.name;
+    s.el.innerHTML = '<span class="name"></span><canvas></canvas><button class="rm" title="Remove">×</button>';
+    s.el.querySelector('.name').textContent = file.name;
+    s.el.addEventListener('click', e => {
+      if (e.target.closest('.rm')) removeSource(s);
+      else if (s.ok) selectSource(s);
+    });
+    $('#thumbs').append(s.el);
+    sources.push(s);
+    loading = loading.then(() => loadSource(s, file));
+  }
+}
+
+async function reencode(bmp) {
+  const k = Math.min(1, MAX_DIM / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(bmp.width * k));
+  c.height = Math.max(1, Math.round(bmp.height * k));
+  const x = c.getContext('2d');
+  x.fillStyle = '#000';
+  x.fillRect(0, 0, c.width, c.height);
+  x.drawImage(bmp, 0, 0, c.width, c.height);
+  const blob = await new Promise(done => c.toBlob(done, 'image/jpeg', 0.9));
+  if (!blob) throw new Error('re-encode failed');
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+async function loadSource(s, file) {
+  let bmp;
+  try {
+    let bytes = new Uint8Array(await file.arrayBuffer());
+    bmp = await createImageBitmap(file);
+    let info = Math.max(bmp.width, bmp.height) <= MAX_DIM && parseJpeg(bytes);
+    if (!info) {
+      bytes = await reencode(bmp);
+      bmp.close();
+      bmp = await createImageBitmap(new Blob([bytes], { type: 'image/jpeg' }));
+      info = parseJpeg(bytes);
+      if (!info) throw new Error('unreadable');
+    }
+    Object.assign(s, { ok: true, bytes, w: info.w, h: info.h, lo: info.scan, hi: scanEnd(bytes), dw: bmp.width, dh: bmp.height, dead: deadShare(bmp) });
+
+    const c = s.el.querySelector('canvas');
+    c.height = 112;
+    c.width = Math.max(1, Math.round(bmp.width / bmp.height * c.height));
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    s.el.classList.remove('pending');
+    if (!sources.includes(s)) return;
+    if (!active) selectSource(s);
+    else syncImageParam();
+  } catch {
+    s.ok = false;
+    s.el.classList.remove('pending');
+    s.el.classList.add('invalid');
+    s.el.title = `${s.name} can't be decoded as an image, so it's skipped`;
+  } finally {
+    bmp?.close();
+  }
+}
+
+function removeSource(s) {
+  sources.splice(sources.indexOf(s), 1);
+  s.el.remove();
+  if (active === s) selectSource(usable()[0] || null);
+  else syncImageParam();
+}
+
+function selectSource(s, fromParam) {
+  active?.el.classList.remove('active');
+  active = s;
+  $('#screen').classList.toggle('empty', !s);
+  syncImageParam(fromParam);
+  if (!s) {
+    current?.close();
+    current = shown = null;
+    return;
+  }
+  s.el.classList.add('active');
+  if (A.play.on) lastGen = -Infinity;
+  else showClean();
+}
+
+function syncImageParam(fromParam) {
+  const p = P.image, list = usable();
+  if (!fromParam && active) {
+    p.n = (list.indexOf(active) + 0.5) / list.length;
+    p.input.value = Math.round(p.n * 1000);
+  }
+  p.out.textContent = p.fmt();
+}
+
+function cycle(dir) {
+  const list = usable();
+  if (list.length) selectSource(list[(list.indexOf(active) + dir + list.length) % list.length]);
+}
+
+// ---------- animation ----------
+
+async function showClean() {
+  const s = active;
+  if (!s) return;
+  try {
+    const bmp = await createImageBitmap(new Blob([s.bytes], { type: 'image/jpeg' }));
+    if (active !== s) return bmp.close();
+    show(bmp, { src: s, bytes: s.bytes, lo: s.lo, hi: s.hi, base: s, seed: newSeed() });
+  } catch {}
+}
+
+function show(bmp, frame) {
+  current?.close();
+  current = bmp;
+  shown = frame;
+  dirty = true;
+}
+
+function note(why) {
+  stats.recent.push(!why);
+  if (stats.recent.length > 100) stats.recent.shift();
+  if (why) {
+    stats.skipped++;
+    stats.why[why] = (stats.why[why] || 0) + 1;
+  } else {
+    stats.shown++;
+    stats.times.push(performance.now());
+  }
+}
+
+// again: re-roll the frame on screen with the same base and seed (knob tweaks while paused)
+async function step(again) {
+  const s = active;
+  busy = true;
+  try {
+    for (let tries = again ? 1 : 6; tries--;) {
+      let base, seed;
+      if (again) {
+        ({ base, seed } = shown);
+      } else {
+        const grown = shown && shown.bytes.length > s.bytes.length * 2;
+        const evolve = shown && shown.src === s && !grown && streak < 30 && Math.random() < val('evolve');
+        base = evolve ? { bytes: shown.bytes, lo: shown.lo, hi: shown.hi } : s;
+        seed = newSeed();
+      }
+      const bytes = mutate(base, seed);
+      const res = await check(bytes, s);
+      if (active !== s) {
+        res.bmp?.close();
+        return;
+      }
+      note(res.why);
+      if (res.why) {
+        streak++;
+        continue;
+      }
+      streak = 0;
+      show(res.bmp, { src: s, bytes, lo: res.lo, hi: scanEnd(bytes), base, seed });
+      return;
+    }
+  } finally {
+    busy = false;
+  }
+}
+
+function loop(t) {
+  requestAnimationFrame(loop);
+  if (active && !busy) {
+    const interval = 1000 / val('rate');
+    if (A.play.on && t - lastGen >= interval) {
+      const due = Math.max(lastGen + interval, t - interval);
+      regen = false;
+      if (usable().length > 1 && Math.random() < val('hop')) cycle(1);
+      lastGen = due;
+      step(false);
+    } else if (!A.play.on && regen && shown?.src === active) {
+      regen = false;
+      step(true);
+    }
+  }
+  if (dirty) {
+    dirty = false;
+    render();
+  }
+}
+
+const out = $('#out'), ctx = out.getContext('2d');
+const layer = document.createElement('canvas'), lctx = layer.getContext('2d');
+const red = document.createElement('canvas'), rctx = red.getContext('2d');
+const blue = document.createElement('canvas'), bctx = blue.getContext('2d');
+const hasFilter = typeof ctx.filter === 'string';
+
+function render() {
+  if (!current) return;
+  const img = current, w = img.width, h = img.height, seed = shown.seed;
+  if (out.width !== w || out.height !== h)
+    for (const c of [out, layer, red, blue]) { c.width = w; c.height = h; }
+
+  lctx.globalCompositeOperation = 'copy';
+  lctx.drawImage(img, 0, 0);
+  lctx.globalCompositeOperation = 'source-over';
+
+  const tear = val('tear');
+  if (tear > 0) {
+    const r = stream(seed, 11);
+    for (let i = 0, n = Math.ceil(tear * 24); i < n; i++) {
+      const y = Math.floor(r() * h);
+      const bh = Math.min(h - y, 1 + Math.floor(r() * r() * h / 6));
+      const dx = Math.round((r() * 2 - 1) * tear * w / 2);
+      lctx.drawImage(img, 0, y, w, bh, dx, y, w, bh);
+      lctx.drawImage(img, 0, y, w, bh, dx - Math.sign(dx) * w, y, w, bh);
+    }
+  }
+
+  const rgb = val('rgb');
+  if (rgb > 0) {
+    const d = Math.max(1, Math.round(rgb * w / 20));
+    for (const [x, color] of [[rctx, '#f00'], [bctx, '#00f']]) {
+      x.globalCompositeOperation = 'copy';
+      x.drawImage(layer, 0, 0);
+      x.globalCompositeOperation = 'multiply';
+      x.fillStyle = color;
+      x.fillRect(0, 0, w, h);
+    }
+    lctx.globalCompositeOperation = 'multiply';
+    lctx.fillStyle = '#0f0';
+    lctx.fillRect(0, 0, w, h);
+    lctx.globalCompositeOperation = 'lighter';
+    lctx.drawImage(red, -d, 0);
+    lctx.drawImage(blue, d, 0);
+    lctx.globalCompositeOperation = 'source-over';
+  }
+
+  const blocks = val('blocks');
+  if (blocks > 0) {
+    const r = stream(seed, 13), u = Math.max(8, Math.round(w / 640) * 8);
+    for (let i = 0; i < blocks; i++) {
+      const bw = u * (1 + Math.floor(r() * 8)), bh = u * (1 + Math.floor(r() * 4));
+      const x = Math.floor(r() * w / u) * u, y = Math.floor(r() * h / u) * u;
+      const sx = x + Math.round((r() * 2 - 1) * 2) * u, sy = y + Math.round((r() * 2 - 1) * 2) * u;
+      lctx.drawImage(out, sx, sy, bw, bh, x, y, bw, bh);
+    }
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 1 - val('trails');
+  if (hasFilter) ctx.filter = filterCss();
+  ctx.drawImage(layer, 0, 0);
+  ctx.restore();
+}
+
+function filterCss() {
+  const f = [];
+  if (val('hue')) f.push(`hue-rotate(${val('hue')}deg)`);
+  if (val('sat') !== 1) f.push(`saturate(${val('sat')})`);
+  if (val('contrast') !== 1) f.push(`contrast(${val('contrast')})`);
+  return f.join(' ') || 'none';
+}
+
+setInterval(() => {
+  const now = performance.now();
+  while (stats.times.length && stats.times[0] < now - 2000) stats.times.shift();
+  if (!active) return;
+  const bad = stats.recent.filter(ok => !ok).length;
+  const why = Object.entries(stats.why).map(([k, v]) => `${WHY[k]} ${v}`).join(', ');
+  $('#stats').textContent = `${active.dw}×${active.dh} · ${(stats.times.length / 2).toFixed(1)} fps · `
+    + `${stats.shown} shown · ${stats.skipped} skipped`
+    + (stats.recent.length ? ` (${Math.round(bad / stats.recent.length * 100)}% lately)` : '')
+    + (why ? ` · ${why}` : '');
+}, 500);
+
+function notify(msg) {
+  $('#note').textContent = msg;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => { $('#note').textContent = ''; }, 5000);
+}
+
+// ---------- actions ----------
+
+const run = {
+  reset() {
+    Object.assign(stats, { shown: 0, skipped: 0, why: {}, recent: [] });
+    streak = 0;
+    ctx.clearRect(0, 0, out.width, out.height);
+    lastGen = performance.now();
+    showClean();
+  },
+  randomize() {
+    for (const p of PARAMS) {
+      if (p.group === 'Motion') continue;
+      const def = p.unmap(p.def);
+      setNorm(p.key, p.rand === 'uniform' ? Math.random() : p.rand === 'near' ? def + (Math.random() - 0.5) * 0.3 : Math.random() ** 2);
+    }
+  },
+  defaults() {
+    for (const p of PARAMS) if (!p.keep) setNorm(p.key, p.unmap(p.def));
+    setToggle('protect', true);
+  },
+  prev: () => cycle(-1),
+  next: () => cycle(1),
+  snap() {
+    if (!current) return;
+    const raw = URL.createObjectURL(new Blob([shown.bytes], { type: 'image/jpeg' }));
+    const name = `glitch-${Date.now()}`;
+    out.toBlob(blob => {
+      const png = URL.createObjectURL(blob);
+      addResult(`<a href="${png}" target="_blank"><img src="${png}"></a>`, [[png, name + '.png', 'png'], [raw, name + '.jpg', 'raw jpg']]);
+    }, 'image/png');
+  },
+};
+
+function trigger(key) {
+  const a = A[key];
+  if (a.toggle) setToggle(key, !a.on);
+  else run[key]();
+}
+
+function setToggle(key, on) {
+  const a = A[key];
+  a.on = on;
+  a.el.classList.toggle('on', on);
+  if (key === 'play' && on) lastGen = -Infinity;
+  if (key === 'rec') record(on);
+  if (key === 'protect') {
+    regen = true;
+    save();
+  }
+}
+
+function record(on) {
+  if (!on) {
+    recorder?.stop();
+    recorder = null;
+    return;
+  }
+  const type = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4']
+    .find(t => window.MediaRecorder?.isTypeSupported(t));
+  if (!out.captureStream || !type) {
+    A.rec.on = false;
+    A.rec.el.classList.remove('on');
+    notify("This browser can't record the canvas.");
+    return;
+  }
+  const chunks = [], rec = new MediaRecorder(out.captureStream(30), { mimeType: type, videoBitsPerSecond: 12e6 });
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  rec.onstop = () => {
+    const url = URL.createObjectURL(new Blob(chunks, { type: rec.mimeType }));
+    const ext = rec.mimeType.includes('mp4') ? 'mp4' : 'webm';
+    addResult(`<video src="${url}" autoplay loop muted playsinline></video>`, [[url, `glitch-${Date.now()}.${ext}`, ext]]);
+  };
+  rec.start(1000);
+  recorder = rec;
+}
+
+function addResult(media, links) {
+  const fig = document.createElement('figure');
+  fig.innerHTML = media + '<figcaption>'
+    + links.map(([href, file, label]) => `<a href="${href}" download="${file}">${label}</a>`).join(' · ')
+    + '</figcaption><button class="rm" title="Remove">×</button>';
+  $('#res').prepend(fig);
+}
+
+$('#res').addEventListener('click', e => {
+  if (!e.target.closest('.rm')) return;
+  const fig = e.target.closest('figure');
+  for (const a of fig.querySelectorAll('a[download]')) URL.revokeObjectURL(a.href);
+  fig.remove();
+});
+
+// ---------- panel ----------
+
+function setNorm(key, n, fromUI) {
+  const p = P[key];
+  p.n = clamp(n);
+  if (!fromUI) p.input.value = Math.round(p.n * 1000);
+  if (key === 'image') {
+    const list = usable();
+    const s = list[Math.min(list.length - 1, Math.floor(p.n * list.length))];
+    if (s && s !== active) selectSource(s, true);
+  } else if (p.group === 'Data') {
+    regen = true;
+  } else if (p.group === 'Pixels') {
+    dirty = true;
+  }
+  p.out.textContent = p.fmt(val(key));
+  save();
+}
+
+const groups = {};
+for (const p of PARAMS) {
+  if (!groups[p.group]) {
+    groups[p.group] = document.createElement('fieldset');
+    groups[p.group].innerHTML = `<legend>${p.group}</legend>`;
+    $('#params').append(groups[p.group]);
+  }
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.dataset.key = p.key;
+  row.title = p.hint + ' (double-click the name to reset)';
+  row.innerHTML = `<label for="p-${p.key}">${p.label}</label><input type="range" id="p-${p.key}" min="0" max="1000"><output></output><i class="bind"></i>`;
+  groups[p.group].append(row);
+  p.el = row;
+  p.input = row.querySelector('input');
+  p.out = row.querySelector('output');
+  p.input.addEventListener('input', () => {
+    if (midi.learn) p.input.value = Math.round(p.n * 1000);
+    else setNorm(p.key, p.input.value / 1000, true);
+  });
+  row.querySelector('label').addEventListener('dblclick', () => setNorm(p.key, p.unmap(p.def)));
+}
+
+for (const a of ACTIONS) {
+  a.el = document.createElement('button');
+  a.el.dataset.key = a.key;
+  a.el.title = a.hint;
+  a.el.innerHTML = `${a.label}<i class="bind"></i>`;
+  a.el.addEventListener('click', () => trigger(a.key));
+  $('#actions').append(a.el);
+}
+
+// In learn mode a click on any control arms it instead of using it.
+const intercept = e => {
+  const el = midi.learn && e.target.closest('[data-key]');
+  if (!el) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.type === 'pointerdown') arm(midi.armed === el.dataset.key ? null : el.dataset.key);
+};
+for (const type of ['pointerdown', 'mousedown', 'click', 'dblclick']) $('#panel').addEventListener(type, intercept, true);
+
+$('#midi-on').addEventListener('click', enableMidi);
+$('#learn').addEventListener('click', () => setLearn(!(midi.learn && !midi.auto)));
+$('#automap').addEventListener('click', () => setLearn(!(midi.learn && midi.auto), true));
+$('#forget').addEventListener('click', () => {
+  if (!confirm('Forget all MIDI mappings?')) return;
+  midi.map = {};
+  reindex();
+  refreshBinds();
+  save();
+});
+
+addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (midi.armed && (e.key === 'Backspace' || e.key === 'Delete')) {
+    e.preventDefault();
+    unbind(midi.armed);
+    return;
+  }
+  if (e.key === 'Escape') return setLearn(false);
+  if (e.target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
+  const key = { ' ': 'play', r: 'reset', x: 'randomize', p: 'prev', n: 'next', s: 'snap' }[e.key.toLowerCase()];
+  if (key) {
+    e.preventDefault();
+    trigger(key);
+  }
+});
+
+out.title = 'double-click for fullscreen';
+out.addEventListener('dblclick', () => out.requestFullscreen?.());
+
+const drop = $('#drop');
+addEventListener('dragover', e => {
+  e.preventDefault();
+  drop.classList.add('over');
+});
+addEventListener('dragleave', e => {
+  if (!e.relatedTarget) drop.classList.remove('over');
+});
+addEventListener('drop', e => {
+  e.preventDefault();
+  drop.classList.remove('over');
+  addFiles(e.dataTransfer.files);
+});
+$('#files').addEventListener('change', e => {
+  addFiles(e.target.files);
+  e.target.value = '';
+});
+$('#demo').addEventListener('click', async e => {
+  e.preventDefault();
+  try {
+    const res = await fetch('logo.jpg');
+    if (!res.ok) throw new Error(res.status);
+    addFiles([new File([await res.blob()], 'logo.jpg', { type: 'image/jpeg' })]);
+  } catch {
+    notify('The demo image only loads when the page is served over http(s).');
+  }
+});
+
+// ---------- midi ----------
+
+const midiId = b => `${b.type}:${b.ch}:${b.num}`;
+const bindLabel = b => b ? (b.type === 'cc' ? 'CC' : 'N') + b.num + (b.ch > 1 ? '/' + b.ch : '') : '';
+
+async function enableMidi() {
+  if (midi.access) return true;
+  if (!navigator.requestMIDIAccess) {
+    $('#midi-status').textContent = "Web MIDI isn't available in this browser. Try Chrome, Edge or Firefox.";
+    return false;
+  }
+  try {
+    midi.access = await navigator.requestMIDIAccess();
+  } catch {
+    $('#midi-status').textContent = 'MIDI access was blocked.';
+    return false;
+  }
+  midi.access.onstatechange = listInputs;
+  listInputs();
+  $('#midi-on').classList.add('on');
+  save();
+  return true;
+}
+
+function listInputs() {
+  const names = [];
+  for (const input of midi.access.inputs.values()) {
+    input.onmidimessage = onMidi;
+    names.push(input.name);
+  }
+  midi.devices = names.length ? names.join(', ') : 'no MIDI inputs connected';
+  showMidi();
+}
+
+function showMidi() {
+  $('#midi-status').textContent = midi.devices + (midi.last ? ` · ${midi.last}` : '');
+  $('#midi-hint').textContent = !midi.learn ? ''
+    : (midi.auto ? 'Move your knobs one at a time, in order.' : 'Click a control, then move a knob or hit a pad.')
+      + ' Backspace unmaps, Esc stops.';
+}
+
+function onMidi(e) {
+  const [status, num, v = 0] = e.data;
+  const kind = status & 0xF0, ch = (status & 0x0F) + 1;
+  if (kind !== 0xB0 && kind !== 0x90 && kind !== 0x80) return;
+  const type = kind === 0xB0 ? 'cc' : 'note';
+  const value = kind === 0x80 ? 0 : v;
+  const id = `${type}:${ch}:${num}`;
+  midi.last = `${type === 'cc' ? 'CC' : 'note'} ${num} ch${ch} = ${value}`;
+  showMidi();
+
+  // auto-map lets already-mapped knobs keep working, so twisting one doesn't grab the next slot
+  if (midi.armed && !(midi.auto && midi.index.has(id)) && (type === 'cc' || value)) {
+    bind(midi.armed, { type, ch, num });
+    arm(midi.auto ? nextUnmapped() : null);
+    if (midi.auto && !midi.armed) setLearn(false);
+    return;
+  }
+
+  const key = midi.index.get(id);
+  if (!key) return;
+  if (P[key]) {
+    if (type === 'cc' || value) setNorm(key, value / 127);
+    return;
+  }
+  const down = value >= 64 || (type === 'note' && value > 0);
+  if (down && !midi.held[id]) trigger(key);
+  midi.held[id] = down;
+}
+
+async function setLearn(on, auto = false) {
+  if (on && !(await enableMidi())) return;
+  midi.learn = on;
+  midi.auto = on && auto;
+  $('#panel').classList.toggle('learning', on);
+  $('#learn').classList.toggle('on', on && !auto);
+  $('#automap').classList.toggle('on', midi.auto);
+  arm(midi.auto ? nextUnmapped() : null);
+  if (midi.auto && !midi.armed) {
+    setLearn(false);
+    notify('Every control is already mapped. Use Forget to start over.');
+    return;
+  }
+  showMidi();
+}
+
+const nextUnmapped = () => PARAMS.find(p => !midi.map[p.key])?.key ?? null;
+
+function arm(key) {
+  midi.armed = key;
+  refreshBinds();
+}
+
+function bind(key, b) {
+  const id = midiId(b);
+  for (const k in midi.map) if (midiId(midi.map[k]) === id) delete midi.map[k];
+  midi.map[key] = b;
+  reindex();
+  refreshBinds();
+  save();
+}
+
+function unbind(key) {
+  delete midi.map[key];
+  reindex();
+  refreshBinds();
+  save();
+}
+
+function reindex() {
+  midi.index = new Map(Object.entries(midi.map).map(([k, b]) => [midiId(b), k]));
+}
+
+function refreshBinds() {
+  for (const c of [...PARAMS, ...ACTIONS]) {
+    c.el.classList.toggle('armed', midi.armed === c.key);
+    c.el.querySelector('.bind').textContent = midi.armed === c.key ? 'move…' : bindLabel(midi.map[c.key]);
+  }
+}
+
+// ---------- persistence ----------
+
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const params = {};
+    for (const p of PARAMS) if (!p.keep) params[p.key] = p.n;
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ params, protect: A.protect.on, midi: midi.map, midiOn: !!midi.access }));
+    } catch {}
+  }, 300);
+}
+
+let saved = {};
+try {
+  saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {};
+} catch {}
+
+for (const p of PARAMS)
+  if (!p.keep && typeof saved.params?.[p.key] === 'number') p.n = clamp(saved.params[p.key]);
+if (typeof saved.protect === 'boolean') A.protect.on = saved.protect;
+for (const [k, b] of Object.entries(saved.midi || {}))
+  if ((P[k] || A[k]) && b && (b.type === 'cc' || b.type === 'note') && b.ch >= 1 && b.ch <= 16 && b.num >= 0 && b.num <= 127)
+    midi.map[k] = { type: b.type, ch: b.ch, num: b.num };
+reindex();
+
+if (saved.midiOn && navigator.requestMIDIAccess && navigator.permissions)
+  navigator.permissions.query({ name: 'midi' }).then(r => r.state === 'granted' && enableMidi(), () => {});
+
+// ---------- go ----------
+
+for (const p of PARAMS) {
+  p.input.value = Math.round(p.n * 1000);
+  p.out.textContent = p.fmt(val(p.key));
+}
+for (const a of ACTIONS) a.el.classList.toggle('on', !!a.on);
+refreshBinds();
+requestAnimationFrame(loop);
+
+})();
+</script>
+
 <!-- I Really love people that inspect pages <3 -->
 </body></html>
